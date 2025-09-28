@@ -1,15 +1,16 @@
 #![cfg(test)]
 
-use super::*;
-use soroban_sdk::{vec, Env, String};
+use soroban_sdk::{vec, Env, String, Vec, Address};
+
+use crate::{Contract, ContractClient};
 
 #[test]
 fn test() {
-    let env = Env::default();
-    let contract_id = env.register(Contract, ());
-    let client = ContractClient::new(&env, &contract_id);
+    let env: Env = Env::default();
+    let contract_id: Address = env.register(Contract, ());
+    let client: ContractClient<'_> = ContractClient::new(&env, &contract_id);
 
-    let words = client.hello(&String::from_str(&env, "Dev"));
+    let words: Vec<String> = client.hello(&String::from_str(&env, "Dev"));
     assert_eq!(
         words,
         vec![

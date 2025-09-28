@@ -60,8 +60,8 @@ pub fn get_nft_counter(env: &Env) -> u64 {
 }
 
 pub fn get_next_nft_id(env: &Env) -> u64 {
-    let current = get_nft_counter(env);
-    let next = current + 1;
+    let current: u64 = get_nft_counter(env);
+    let next: u64 = current + 1;
     env.storage().instance().set(&NFT_COUNTER, &next);
     next
 }
@@ -69,44 +69,44 @@ pub fn get_next_nft_id(env: &Env) -> u64 {
 // --- NFT Storage ---
 
 pub fn get_nft(env: &Env, nft_id: u64) -> Option<NFT> {
-    let key = StorageKey::NFT(nft_id);
+    let key: StorageKey = StorageKey::NFT(nft_id);
     env.storage().persistent().get(&key)
 }
 
 pub fn set_nft(env: &Env, nft: &NFT) {
-    let key = StorageKey::NFT(nft.id);
+    let key: StorageKey = StorageKey::NFT(nft.id);
     env.storage().persistent().set(&key, nft);
 }
 
 // --- Indexed Lists ---
 
 pub fn get_creator_nfts(env: &Env, creator: &Address) -> Vec<u64> {
-    let key = StorageKey::CreatorNFTs(creator.clone());
+    let key: StorageKey = StorageKey::CreatorNFTs(creator.clone());
     env.storage().persistent().get(&key).unwrap_or(Vec::new(env))
 }
 
 pub fn add_creator_nft(env: &Env, creator: &Address, nft_id: u64) {
-    let key = StorageKey::CreatorNFTs(creator.clone());
-    let mut nfts = get_creator_nfts(env, creator);
+    let key: StorageKey = StorageKey::CreatorNFTs(creator.clone());
+    let mut nfts: Vec<u64> = get_creator_nfts(env, creator);
     nfts.push_back(nft_id);
     env.storage().persistent().set(&key, &nfts);
 }
 
 pub fn get_owner_nfts(env: &Env, owner: &Address) -> Vec<u64> {
-    let key = StorageKey::OwnerNFTs(owner.clone());
+    let key: StorageKey = StorageKey::OwnerNFTs(owner.clone());
     env.storage().persistent().get(&key).unwrap_or(Vec::new(env))
 }
 
 pub fn add_owner_nft(env: &Env, owner: &Address, nft_id: u64) {
-    let key = StorageKey::OwnerNFTs(owner.clone());
-    let mut nfts = get_owner_nfts(env, owner);
+    let key: StorageKey = StorageKey::OwnerNFTs(owner.clone());
+    let mut nfts: Vec<u64> = get_owner_nfts(env, owner);
     nfts.push_back(nft_id);
     env.storage().persistent().set(&key, &nfts);
 }
 
 pub fn remove_owner_nft(env: &Env, owner: &Address, nft_id: u64) {
-    let key = StorageKey::OwnerNFTs(owner.clone());
-    let mut nfts = get_owner_nfts(env, owner);
+    let key: StorageKey = StorageKey::OwnerNFTs(owner.clone());
+    let mut nfts: Vec<u64> = get_owner_nfts(env, owner);
     if let Some(pos) = nfts.iter().position(|id| id == nft_id) {
         nfts.remove(pos as u32);
     }
@@ -114,13 +114,13 @@ pub fn remove_owner_nft(env: &Env, owner: &Address, nft_id: u64) {
 }
 
 pub fn get_category_nfts(env: &Env, category: &String) -> Vec<u64> {
-    let key = StorageKey::CategoryNFTs(category.clone());
+    let key: StorageKey = StorageKey::CategoryNFTs(category.clone());
     env.storage().persistent().get(&key).unwrap_or(Vec::new(env))
 }
 
 pub fn add_category_nft(env: &Env, category: &String, nft_id: u64) {
-    let key = StorageKey::CategoryNFTs(category.clone());
-    let mut nfts = get_category_nfts(env, category);
+    let key: StorageKey = StorageKey::CategoryNFTs(category.clone());
+    let mut nfts: Vec<u64> = get_category_nfts(env, category);
     nfts.push_back(nft_id);
     env.storage().persistent().set(&key, &nfts);
 }
@@ -133,7 +133,7 @@ pub fn get_all_nft_ids(env: &Env) -> Vec<u64> {
 }
 
 pub fn add_all_nft_id(env: &Env, nft_id: u64) {
-    let mut all_ids = get_all_nft_ids(env);
+    let mut all_ids: Vec<u64> = get_all_nft_ids(env);
     all_ids.push_back(nft_id);
     env.storage().persistent().set(&StorageKey::AllNFTs, &all_ids);
 }

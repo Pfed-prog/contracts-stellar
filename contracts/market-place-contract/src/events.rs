@@ -45,7 +45,7 @@ pub fn emit_nft_created(
     price: u128,
     token_address: Address,
 ) {
-    let event = NFTCreatedEvent {
+    let event: NFTCreatedEvent = NFTCreatedEvent {
         nft_id,
         creator,
         name,
@@ -63,7 +63,7 @@ pub fn emit_nft_sold(
     price: u128,
     token_address: Address,
 ) {
-    let event = NFTSoldEvent {
+    let event: NFTSoldEvent = NFTSoldEvent {
         nft_id,
         buyer,
         previous_owner,
@@ -80,7 +80,7 @@ pub fn emit_nft_price_updated(
     old_price: u128,
     new_price: u128,
 ) {
-    let event = NFTPriceUpdatedEvent {
+    let event: NFTPriceUpdatedEvent = NFTPriceUpdatedEvent {
         nft_id,
         creator,
         old_price,
@@ -95,7 +95,7 @@ pub fn emit_nft_availability_toggled(
     creator: Address,
     is_available: bool,
 ) {
-    let event = NFTAvailabilityToggledEvent {
+    let event: NFTAvailabilityToggledEvent = NFTAvailabilityToggledEvent {
         nft_id,
         creator,
         is_available,

@@ -1,7 +1,9 @@
-use crate::error::ContractError;
-use crate::events::*;
-use crate::storage::{self, *};
 use soroban_sdk::{token, Address, Env, String, Vec, Map};
+
+use crate::{NFT, NFTStatus};
+use crate::error::ContractError;
+use crate::storage::{get_next_nft_id, get_nft as other_get_nft, set_nft, add_creator_nft, add_owner_nft, add_category_nft, add_all_nft_id, remove_owner_nft, get_all_nft_ids, get_nft_counter, get_owner_nfts, get_category_nfts, get_creator_nfts};
+use crate::events::{emit_nft_created, emit_nft_sold, emit_nft_price_updated, emit_nft_availability_toggled};
 
 /// Creates a new NFT, assigning it to the creator and storing its metadata.
 pub fn create_nft(
@@ -18,10 +20,10 @@ pub fn create_nft(
         return Err(ContractError::InvalidPrice);
     }
 
-    let nft_id = get_next_nft_id(env);
-    let timestamp = env.ledger().timestamp();
+    let nft_id: u64 = get_next_nft_id(env);
+    let timestamp: u64 = env.ledger().timestamp();
 
-    let nft = NFT {
+    let nft: NFT = NFT {
         id: nft_id,
         creator: creator.clone(),
         owner: creator.clone(),
@@ -61,7 +63,7 @@ pub fn buy_nft(
     buyer: &Address,
     nft_id: u64,
 ) -> Result<(), ContractError> {
-    let mut nft = get_nft(env, nft_id)?;
+    let mut nft: NFT = get_nft(env, nft_id)?;
     
     if nft.status != NFTStatus::Available {
         return Err(ContractError::NFTNotAvailable);
@@ -71,10 +73,10 @@ pub fn buy_nft(
         return Err(ContractError::NFTAlreadyOwned);
     }
     
-    let token_client = token::Client::new(env, &nft.token_address);
+    let token_client: token::TokenClient<'_> = token::Client::new(env, &nft.token_address);
     token_client.transfer(buyer, &nft.owner, &(nft.price as i128));
     
-    let previous_owner = nft.owner.clone();
+    let previous_owner: Address = nft.owner.clone();
     remove_owner_nft(env, &previous_owner, nft_id);
     add_owner_nft(env, buyer, nft_id);
     
@@ -103,7 +105,7 @@ pub fn update_nft_price(
     nft_id: u64,
     new_price: u128,
 ) -> Result<(), ContractError> {
-    let mut nft = get_nft(env, nft_id)?;
+    let mut nft: NFT = get_nft(env, nft_id)?;
     
     if nft.creator != *creator {
         return Err(ContractError::CreatorOnly);
@@ -113,7 +115,7 @@ pub fn update_nft_price(
         return Err(ContractError::InvalidPrice);
     }
     
-    let old_price = nft.price;
+    let old_price: u128 = nft.price;
     nft.price = new_price;
     
     set_nft(env, &nft);
@@ -129,13 +131,13 @@ pub fn toggle_nft_availability(
     creator: &Address,
     nft_id: u64,
 ) -> Result<(), ContractError> {
-    let mut nft = get_nft(env, nft_id)?;
+    let mut nft: NFT = get_nft(env, nft_id)?;
     
     if nft.creator != *creator {
         return Err(ContractError::CreatorOnly);
     }
     
-    let new_status = match nft.status {
+    let new_status: NFTStatus = match nft.status {
         NFTStatus::Available => NFTStatus::Unavailable,
         NFTStatus::Unavailable => NFTStatus::Available,
         NFTStatus::Sold => return Err(ContractError::OperationNotAllowed),
@@ -144,7 +146,7 @@ pub fn toggle_nft_availability(
     nft.status = new_status.clone();
     set_nft(env, &nft);
     
-    let is_available = matches!(new_status, NFTStatus::Available);
+    let is_available: bool = matches!(new_status, NFTStatus::Available);
     
     emit_nft_availability_toggled(env, nft_id, creator.clone(), is_available);
     
@@ -155,13 +157,13 @@ pub fn toggle_nft_availability(
 
 /// Gets the details for a single NFT.
 pub fn get_nft(env: &Env, nft_id: u64) -> Result<NFT, ContractError> {
-    storage::get_nft(env, nft_id).ok_or(ContractError::NFTNotFound)
+    other_get_nft(env, nft_id).ok_or(ContractError::NFTNotFound)
 }
 
 /// Gets a list of all NFTs ever created.
 pub fn get_all_nfts(env: &Env) -> Vec<NFT> {
-    let nft_ids = get_all_nft_ids(env);
-    let mut nfts = Vec::new(env);
+    let nft_ids: Vec<u64> = get_all_nft_ids(env);
+    let mut nfts: Vec<NFT> = Vec::new(env);
     
     for nft_id in nft_ids.iter() {
         if let Ok(nft) = get_nft(env, nft_id) {
@@ -174,8 +176,8 @@ pub fn get_all_nfts(env: &Env) -> Vec<NFT> {
 
 /// Gets all NFTs belonging to a specific category.
 pub fn get_nfts_by_category(env: &Env, category: String) -> Vec<NFT> {
-    let nft_ids = get_category_nfts(env, &category);
-    let mut nfts = Vec::new(env);
+    let nft_ids: Vec<u64> = get_category_nfts(env, &category);
+    let mut nfts: Vec<NFT> = Vec::new(env);
     
     for nft_id in nft_ids.iter() {
         if let Ok(nft) = get_nft(env, nft_id) {
@@ -188,8 +190,8 @@ pub fn get_nfts_by_category(env: &Env, category: String) -> Vec<NFT> {
 
 /// Gets all NFTs created by a specific address.
 pub fn get_nfts_by_creator(env: &Env, creator: Address) -> Vec<NFT> {
-    let nft_ids = get_creator_nfts(env, &creator);
-    let mut nfts = Vec::new(env);
+    let nft_ids: Vec<u64> = get_creator_nfts(env, &creator);
+    let mut nfts: Vec<NFT> = Vec::new(env);
     
     for nft_id in nft_ids.iter() {
         if let Ok(nft) = get_nft(env, nft_id) {
@@ -202,8 +204,8 @@ pub fn get_nfts_by_creator(env: &Env, creator: Address) -> Vec<NFT> {
 
 /// Gets all NFTs currently owned by a specific address.
 pub fn get_owned_nfts(env: &Env, owner: Address) -> Vec<NFT> {
-    let nft_ids = get_owner_nfts(env, &owner);
-    let mut nfts = Vec::new(env);
+    let nft_ids: Vec<u64> = get_owner_nfts(env, &owner);
+    let mut nfts: Vec<NFT> = Vec::new(env);
     
     for nft_id in nft_ids.iter() {
         if let Ok(nft) = get_nft(env, nft_id) {
@@ -216,14 +218,14 @@ pub fn get_owned_nfts(env: &Env, owner: Address) -> Vec<NFT> {
 
 /// Provides statistics about the marketplace.
 pub fn get_marketplace_stats(env: &Env) -> Map<String, u64> {
-    let mut stats = Map::new(env);
+    let mut stats: Map<String, u64> = Map::new(env);
     
-    let total_nfts = get_nft_counter(env);
+    let total_nfts: u64 = get_nft_counter(env);
     stats.set(String::from_str(env, "total_nfts"), total_nfts);
     
-    let all_nfts = get_all_nfts(env);
-    let mut available_count = 0u64;
-    let mut sold_count = 0u64;
+    let all_nfts: Vec<NFT> = get_all_nfts(env);
+    let mut available_count: u64 = 0u64;
+    let mut sold_count: u64 = 0u64;
     
     for nft in all_nfts.iter() {
         match nft.status {

@@ -1,11 +1,11 @@
 #![cfg(test)]
 
-use super::*;
-use crate::interfaces::{NftClient, NftInterface};
 use soroban_sdk::token::Client as TokenClient;
 use soroban_sdk::token::StellarAssetClient as TokenAdmin;
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String};
 use soroban_sdk::{map, testutils::Address as _, Map};
+
+use crate::interfaces::{NftClient, NftInterface};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]

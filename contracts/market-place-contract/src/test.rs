@@ -1,12 +1,15 @@
 #![cfg(test)]
 extern crate std;
 
-use super::*;
-use crate::error::ContractError;
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{token, Address, Env, IntoVal, String};
+
 use token::Client as TokenClient;
 use token::StellarAssetClient;
+
+use crate::{MarketplaceContract,MarketplaceContractClient};
+use crate::storage::NFTStatus;
+use crate::error::ContractError;
 
 const NFT_PRICE: u128 = 100;
 const USER_STARTING_BALANCE: i128 = 1_000_000;

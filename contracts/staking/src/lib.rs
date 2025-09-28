@@ -1,16 +1,16 @@
 #![no_std]
 use soroban_sdk::{
-    contract, contractimpl, symbol_short, Address, Env, String, TryFromVal, Val, Vec,
+    contract, contracttype, contractimpl, symbol_short, Address, Env, String, TryFromVal, Val, Vec,
 };
 
+use crate::types::{DataKey, NFTStake, StakingParams};
+
 mod types;
-use types::*;
 mod interfaces;
 mod test;
 use interfaces::{ImpactClient, NftClient, TokenClient};
 
 // Add event types
-use soroban_sdk::contracttype;
 
 #[contracttype]
 pub struct NFTStakedEvent {
@@ -58,7 +58,7 @@ impl ImpactProductStaking {
         env.storage()
             .instance()
             .set(&DataKey::REBAZToken, &rebaz_token);
-        let params = StakingParams {
+        let params: StakingParams = StakingParams {
             base_reward_rate: 1000,
             min_lock_period: 7 * 24 * 60 * 60,   // 7 days
             max_lock_period: 365 * 24 * 60 * 60, // 365 days
@@ -80,9 +80,9 @@ impl ImpactProductStaking {
         let nft_contract: Address = env.storage().instance().get(&DataKey::NFTContract).unwrap();
 
         // Use proper NFT interface to check ownership
-        let nft_client = NftClient::new(&env, &nft_contract);
-        let token_id_str = token_id_to_string(&env, token_id);
-        let owner = nft_client.owner(&token_id_str);
+        let nft_client: NftClient<'_> = NftClient::new(&env, &nft_contract);
+        let token_id_str: String = token_id_to_string(&env, token_id);
+        let owner: Address = nft_client.owner(&token_id_str);
 
         if owner != user {
             panic!("Not the token owner");
@@ -90,10 +90,10 @@ impl ImpactProductStaking {
 
         // Transfer NFT to this contract using proper interface
         nft_client.transfer(&user, &env.current_contract_address(), &token_id_str);
-        let now = env.ledger().timestamp();
-        let lock_end_time = now + lock_period;
-        let multiplier = calculate_multiplier(lock_period);
-        let stake = NFTStake {
+        let now: u64 = env.ledger().timestamp();
+        let lock_end_time: u64 = now + lock_period;
+        let multiplier: u32 = calculate_multiplier(lock_period);
+        let stake: NFTStake = NFTStake {
             token_id,
             owner: user.clone(),
             start_time: now,
@@ -137,7 +137,7 @@ impl ImpactProductStaking {
         if stake.owner != user {
             panic!("Not stake owner");
         }
-        let reward = calculate_rewards(&env, &stake);
+        let reward: u64 = calculate_rewards(&env, &stake);
         if reward == 0 {
             panic!("No rewards to claim");
         }
@@ -147,7 +147,7 @@ impl ImpactProductStaking {
             .set(&DataKey::Stake(token_id), &stake);
         // Cross-contract call to REBAZ token contract to mint reward
         let rebaz_token: Address = env.storage().instance().get(&DataKey::REBAZToken).unwrap();
-        let token_client = TokenClient::new(&env, &rebaz_token);
+        let token_client: TokenClient<'_> = TokenClient::new(&env, &rebaz_token);
         token_client.mint(&user, &(reward as i128));
         // Emit RewardsClaimed event
         env.events().publish(
@@ -174,14 +174,14 @@ impl ImpactProductStaking {
         if env.ledger().timestamp() < stake.lock_end_time {
             panic!("Lock period not ended");
         }
-        let reward = Self::claim_rewards(env.clone(), user.clone(), token_id);
+        let reward: u64 = Self::claim_rewards(env.clone(), user.clone(), token_id);
         env.storage().instance().remove(&DataKey::Stake(token_id));
         let mut staked_tokens: Vec<u32> = env
             .storage()
             .instance()
             .get(&DataKey::StakedTokens(user.clone()))
             .unwrap_or(Vec::new(&env));
-        let mut idx = None;
+        let mut idx: Option<u32> = None;
         for i in 0..staked_tokens.len() {
             if staked_tokens.get(i).unwrap() == token_id {
                 idx = Some(i);
@@ -196,8 +196,8 @@ impl ImpactProductStaking {
             .set(&DataKey::StakedTokens(user.clone()), &staked_tokens);
         // Cross-contract call to NFT contract to transfer NFT back to user
         let nft_contract: Address = env.storage().instance().get(&DataKey::NFTContract).unwrap();
-        let nft_client = NftClient::new(&env, &nft_contract);
-        let token_id_str = token_id_to_string(&env, token_id);
+        let nft_client: NftClient<'_> = NftClient::new(&env, &nft_contract);
+        let token_id_str: String = token_id_to_string(&env, token_id);
         nft_client.transfer(&env.current_contract_address(), &user, &token_id_str);
         // Emit NFTUnstaked event
         env.events().publish(
@@ -245,7 +245,7 @@ impl ImpactProductStaking {
         if stored_admin != admin {
             panic!("Not admin");
         }
-        let params = StakingParams {
+        let params: StakingParams = StakingParams {
             base_reward_rate,
             min_lock_period,
             max_lock_period,
@@ -281,19 +281,19 @@ fn calculate_multiplier(lock_period: u64) -> u32 {
 fn calculate_rewards(env: &Env, stake: &NFTStake) -> u64 {
     let nft_contract: Address = env.storage().instance().get(&DataKey::NFTContract).unwrap();
     // Use proper impact interface to get impact data
-    let impact_client = ImpactClient::new(env, &nft_contract);
-    let token_id_str = token_id_to_string(env, stake.token_id);
+    let impact_client: ImpactClient<'_> = ImpactClient::new(env, &nft_contract);
+    let token_id_str: String = token_id_to_string(env, stake.token_id);
     let impact_vec: Vec<Val> = impact_client.get_impact_data(&token_id_str);
-    let impact_value = u64::try_from_val(env, &impact_vec.get(0).unwrap()).unwrap();
-    let verified = bool::try_from_val(env, &impact_vec.get(1).unwrap()).unwrap();
-    let mut impact = impact_value;
+    let impact_value: u64 = u64::try_from_val(env, &impact_vec.get(0).unwrap()).unwrap();
+    let verified: bool = bool::try_from_val(env, &impact_vec.get(1).unwrap()).unwrap();
+    let mut impact: u64 = impact_value;
     if verified {
         impact = (impact * 120) / 100;
     }
     let params: StakingParams = env.storage().instance().get(&DataKey::Params).unwrap();
-    let duration = env.ledger().timestamp() - stake.last_claim_time;
-    let annual_equiv = (duration * 10000) / 31536000;
-    let rewards =
+    let duration: u64 = env.ledger().timestamp() - stake.last_claim_time;
+    let annual_equiv: u64 = (duration * 10000) / 31536000;
+    let rewards: u64 =
         (impact * params.base_reward_rate as u64 * stake.multiplier as u64 * annual_equiv)
             / (10000 * 10000);
     rewards
