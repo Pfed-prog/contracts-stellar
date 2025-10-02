@@ -6,7 +6,7 @@ pub struct NFTCreatedEvent {
     pub nft_id: u64,
     pub creator: Address,
     pub name: String,
-    pub price: u128,
+    pub price: i128,
     pub token_address: Address,
 }
 
@@ -16,7 +16,7 @@ pub struct NFTSoldEvent {
     pub nft_id: u64,
     pub buyer: Address,
     pub previous_owner: Address,
-    pub price: u128,
+    pub price: i128,
     pub token_address: Address,
 }
 
@@ -25,8 +25,8 @@ pub struct NFTSoldEvent {
 pub struct NFTPriceUpdatedEvent {
     pub nft_id: u64,
     pub creator: Address,
-    pub old_price: u128,
-    pub new_price: u128,
+    pub old_price: i128,
+    pub new_price: i128,
 }
 
 #[contracttype]
@@ -42,7 +42,7 @@ pub fn emit_nft_created(
     nft_id: u64,
     creator: Address,
     name: String,
-    price: u128,
+    price: i128,
     token_address: Address,
 ) {
     let event: NFTCreatedEvent = NFTCreatedEvent {
@@ -60,7 +60,7 @@ pub fn emit_nft_sold(
     nft_id: u64,
     buyer: Address,
     previous_owner: Address,
-    price: u128,
+    price: i128,
     token_address: Address,
 ) {
     let event: NFTSoldEvent = NFTSoldEvent {
@@ -77,8 +77,8 @@ pub fn emit_nft_price_updated(
     env: &Env,
     nft_id: u64,
     creator: Address,
-    old_price: u128,
-    new_price: u128,
+    old_price: i128,
+    new_price: i128,
 ) {
     let event: NFTPriceUpdatedEvent = NFTPriceUpdatedEvent {
         nft_id,

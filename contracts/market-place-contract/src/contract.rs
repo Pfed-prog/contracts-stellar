@@ -13,7 +13,7 @@ pub fn create_nft(
     description: String,
     category: String,
     image_url: String,
-    price: u128,
+    price: i128,
     token_address: &Address,
 ) -> Result<u64, ContractError> {
     if price == 0 {
@@ -103,7 +103,7 @@ pub fn update_nft_price(
     env: &Env,
     creator: &Address,
     nft_id: u64,
-    new_price: u128,
+    new_price: i128,
 ) -> Result<(), ContractError> {
     let mut nft: NFT = get_nft(env, nft_id)?;
     
@@ -115,7 +115,7 @@ pub fn update_nft_price(
         return Err(ContractError::InvalidPrice);
     }
     
-    let old_price: u128 = nft.price;
+    let old_price: i128 = nft.price;
     nft.price = new_price;
     
     set_nft(env, &nft);

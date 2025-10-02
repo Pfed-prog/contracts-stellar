@@ -11,7 +11,7 @@ use crate::{MarketplaceContract,MarketplaceContractClient};
 use crate::storage::NFTStatus;
 use crate::error::ContractError;
 
-const NFT_PRICE: u128 = 100;
+const NFT_PRICE: i128 = 100;
 const USER_STARTING_BALANCE: i128 = 1_000_000;
 
 // --- Test Struct and Setup ---

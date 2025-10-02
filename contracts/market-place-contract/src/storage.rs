@@ -20,7 +20,7 @@ pub struct NFT {
     pub description: String,
     pub category: String,
     pub image_url: String,
-    pub price: u128,
+    pub price: i128,
     pub token_address: Address,
     pub status: NFTStatus,
     pub created_at: u64,

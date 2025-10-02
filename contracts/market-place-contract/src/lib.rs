@@ -34,7 +34,7 @@ impl MarketplaceContract {
         description: String,
         category: String,
         image_url: String,
-        price: u128,
+        price: i128,
         token_address: Address,
     ) -> Result<u64, ContractError> {
         creator.require_auth();
@@ -61,7 +61,7 @@ impl MarketplaceContract {
         env: Env,
         creator: Address,
         nft_id: u64,
-        new_price: u128,
+        new_price: i128,
     ) -> Result<(), ContractError> {
         creator.require_auth();
         contract::update_nft_price(&env, &creator, nft_id, new_price)
