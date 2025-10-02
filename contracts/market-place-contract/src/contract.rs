@@ -74,7 +74,7 @@ pub fn buy_nft(
     }
     
     let token_client: token::TokenClient<'_> = token::Client::new(env, &nft.token_address);
-    token_client.transfer(buyer, &nft.owner, &(nft.price as i128));
+    token_client.transfer(buyer, &nft.owner, &(nft.price));
     
     let previous_owner: Address = nft.owner.clone();
     remove_owner_nft(env, &previous_owner, nft_id);

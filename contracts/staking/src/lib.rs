@@ -301,13 +301,19 @@ fn calculate_rewards(env: &Env, stake: &NFTStake) -> u64 {
 
 // Helper function to convert token_id to string
 fn token_id_to_string(env: &Env, token_id: u32) -> String {
-    // Simple conversion for now - can be improved
-    match token_id {
-        1 => String::from_str(env, "1"),
-        2 => String::from_str(env, "2"),
-        3 => String::from_str(env, "3"),
-        4 => String::from_str(env, "4"),
-        5 => String::from_str(env, "5"),
-        _ => String::from_str(env, "1"), // Default fallback
+    let mut buf: [u8; 10] = [0u8; 10];
+    let mut n: u32 = token_id;
+    let mut idx: usize = buf.len();
+    if n == 0 {
+        idx -= 1;
+        buf[idx] = b'0';
+    } else {
+        while n > 0 {
+            idx -= 1;
+            buf[idx] = b'0' + (n % 10) as u8;
+            n /= 10;
+        }
     }
+    let ascii: &str = core::str::from_utf8(&buf[idx..]).unwrap();
+    String::from_str(env, ascii)
 }
